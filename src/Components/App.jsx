@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import countriesArray from "./countriesArray";
 import ClockContainer from "./ClockContainer";
-import Buttons from "./Buttons";
 import Header from "./Header";
+
+const orbitron = { fontFamily: "'Orbitron', sans-serif" };
 
 const STARS = Array.from({ length: 90 }, (_, i) => ({
   x: (i * 137.508) % 100,
@@ -15,21 +16,18 @@ const STARS = Array.from({ length: 90 }, (_, i) => ({
 
 function getSkyBackground(hour) {
   if (hour >= 22 || hour < 5) {
-    // Night — nearly black, barely tinted blue, faint moon glow
     return [
       "radial-gradient(ellipse at 32% 22%, rgba(140,175,220,0.08) 0%, transparent 36%)",
       "linear-gradient(to bottom, #010208, #030814, #06101e)",
     ].join(", ");
   }
   if (hour < 7) {
-    // Pre-dawn — dark indigo at zenith, first warmth at horizon
     return [
       "radial-gradient(ellipse at 15% 92%, rgba(200,85,18,0.48) 0%, transparent 38%)",
       "linear-gradient(to bottom, #080318, #1e0a38, #4e1830, #922c10)",
     ].join(", ");
   }
   if (hour < 9) {
-    // Sunrise — very dark rust at zenith, coral/gold bloom at horizon
     return [
       "radial-gradient(ellipse at 50% 94%, rgba(228,158,28,0.68) 0%, transparent 36%)",
       "radial-gradient(ellipse at 50% 100%, rgba(195,55,8,0.44) 0%, transparent 28%)",
@@ -37,35 +35,30 @@ function getSkyBackground(hour) {
     ].join(", ");
   }
   if (hour < 12) {
-    // Morning — steel blue zenith, pale hazy horizon, sun high-right
     return [
       "radial-gradient(ellipse at 80% 8%, rgba(255,248,190,0.28) 0%, transparent 24%)",
       "linear-gradient(to bottom, #0c2c48, #1a5078, #3480a8, #60a8c8, #9ccade)",
     ].join(", ");
   }
   if (hour < 15) {
-    // Midday — open bright sky, warm bloom overhead, light horizon haze
     return [
       "radial-gradient(ellipse at 50% 2%, rgba(255,250,208,0.32) 0%, transparent 22%)",
       "linear-gradient(to bottom, #0c4878, #1878b0, #3ea0ca, #74bedd, #b0d8ea)",
     ].join(", ");
   }
   if (hour < 18) {
-    // Afternoon — muted cerulean, atmosphere lightens+warms near horizon
     return [
       "radial-gradient(ellipse at 26% 12%, rgba(255,242,160,0.14) 0%, transparent 24%)",
       "linear-gradient(to bottom, #1a4870, #2e78a8, #5298be, #88bcd2, #c0d8e4)",
     ].join(", ");
   }
   if (hour < 20) {
-    // Sunset — slate blue → indigo → rose → burnt orange (no purple jump)
     return [
       "radial-gradient(ellipse at 55% 92%, rgba(238,135,14,0.78) 0%, transparent 40%)",
       "radial-gradient(ellipse at 50% 100%, rgba(175,32,4,0.38) 0%, transparent 28%)",
       "linear-gradient(to bottom, #182848, #2e2458, #7a2040, #b83c18, #d86810)",
     ].join(", ");
   }
-  // Dusk — purple deepening into midnight
   return [
     "radial-gradient(ellipse at 72% 76%, rgba(180,55,18,0.12) 0%, transparent 28%)",
     "linear-gradient(to bottom, #06040e, #12082c, #200c4a, #140828)",
@@ -73,34 +66,19 @@ function getSkyBackground(hour) {
 }
 
 function App() {
-  const [currentCountryIndex, setCurrentCountryIndex] = useState(0);
-  const [currentHour, setCurrentHour] = useState(0);
+  const [currentHour, setCurrentHour] = useState(() => new Date().getHours());
+  const [isDigital, setIsDigital] = useState(false);
 
   useEffect(() => {
-    const updateHour = () => {
-      const localTime = new Date().toLocaleString("en-US", {
-        timeZone: countriesArray[currentCountryIndex].timezone,
-      });
-      setCurrentHour(new Date(localTime).getHours());
-    };
-    updateHour();
-    const interval = setInterval(updateHour, 60000);
+    const interval = setInterval(() => setCurrentHour(new Date().getHours()), 60000);
     return () => clearInterval(interval);
-  }, [currentCountryIndex]);
-
-  const handleNext = () =>
-    setCurrentCountryIndex((prev) => (prev + 1) % countriesArray.length);
-
-  const handlePrevious = () =>
-    setCurrentCountryIndex((prev) =>
-      prev === 0 ? countriesArray.length - 1 : prev - 1
-    );
+  }, []);
 
   const showStars = currentHour >= 20 || currentHour < 7;
 
   return (
     <div
-      className="flex-col min-h-screen flex items-center justify-center gap-16 relative overflow-hidden"
+      className="min-h-screen flex flex-col items-center gap-10 py-10 px-4 relative overflow-x-hidden"
       style={{ background: getSkyBackground(currentHour) }}
     >
       {showStars && (
@@ -122,9 +100,45 @@ function App() {
           ))}
         </div>
       )}
-      <Header />
-      <ClockContainer country={countriesArray[currentCountryIndex]} />
-      <Buttons onPrevious={handlePrevious} onNext={handleNext} />
+
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <Header />
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsDigital(false)}
+            className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+              !isDigital
+                ? "border-cyan-400/70 bg-cyan-400/10 text-cyan-400"
+                : "border-white/10 text-white/25 hover:text-white/40"
+            }`}
+            style={orbitron}
+          >
+            Analog
+          </button>
+          <button
+            onClick={() => setIsDigital(true)}
+            className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+              isDigital
+                ? "border-cyan-400/70 bg-cyan-400/10 text-cyan-400"
+                : "border-white/10 text-white/25 hover:text-white/40"
+            }`}
+            style={orbitron}
+          >
+            Digital
+          </button>
+        </div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 place-items-center">
+        {countriesArray.map((country) => (
+          <div
+            key={country.id}
+            className="flex items-center justify-center rounded-3xl p-5 bg-black/10 w-full"
+          >
+            <ClockContainer country={country} isDigital={isDigital} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

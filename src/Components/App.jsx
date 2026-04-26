@@ -68,6 +68,7 @@ function getSkyBackground(hour) {
 function App() {
   const [currentHour, setCurrentHour] = useState(() => new Date().getHours());
   const [isDigital, setIsDigital] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentHour(new Date().getHours()), 60000);
@@ -75,6 +76,16 @@ function App() {
   }, []);
 
   const showStars = currentHour >= 20 || currentHour < 7;
+
+  const q = search.trim().toLowerCase();
+  const visibleCountries = q
+    ? countriesArray.filter(
+        (c) =>
+          c.country.toLowerCase().includes(q) ||
+          c.continent.toLowerCase().includes(q) ||
+          c.timezone.toLowerCase().includes(q)
+      )
+    : countriesArray;
 
   return (
     <div
@@ -101,7 +112,7 @@ function App() {
         </div>
       )}
 
-      <div className="relative z-10 flex flex-col items-center gap-4">
+      <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-6xl">
         <Header />
         <div className="flex gap-2">
           <button
@@ -127,17 +138,50 @@ function App() {
             Digital
           </button>
         </div>
+
+        <div className="relative w-full max-w-sm">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400/50 pointer-events-none"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search city, region, or timezone…"
+            className="w-full pl-9 pr-9 py-2 rounded-full bg-white/5 border border-white/10 text-white/80 text-xs placeholder-white/25 focus:outline-none focus:border-cyan-400/50 focus:bg-cyan-400/5 transition-all duration-200"
+            style={orbitron}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 place-items-center">
-        {countriesArray.map((country) => (
-          <div
-            key={country.id}
-            className="flex items-center justify-center rounded-3xl p-5 bg-black/10 w-full"
-          >
-            <ClockContainer country={country} isDigital={isDigital} />
+        {visibleCountries.length > 0 ? (
+          visibleCountries.map((country) => (
+            <div
+              key={country.id}
+              className="flex items-center justify-center rounded-3xl p-5 bg-black/10 w-full"
+            >
+              <ClockContainer country={country} isDigital={isDigital} />
+            </div>
+          ))
+        ) : (
+          <div className="col-span-full flex flex-col items-center gap-2 py-20 text-white/25" style={orbitron}>
+            <span className="text-4xl">🌐</span>
+            <p className="text-sm">No clocks match &ldquo;{search}&rdquo;</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

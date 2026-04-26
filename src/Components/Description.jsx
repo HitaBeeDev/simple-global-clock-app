@@ -18,6 +18,11 @@ const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export default function Description({ country, time }) {
   const ampm = time.getHours() >= 12 ? "PM" : "AM";
+  const date = new Intl.DateTimeFormat("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(time);
 
   const utcOffset =
     new Intl.DateTimeFormat("en", {
@@ -42,9 +47,7 @@ export default function Description({ country, time }) {
         <span className="text-white/20">·</span>
         <span className={isLocal ? "text-cyan-400/60" : "text-white/50"}>{diff}</span>
       </div>
-      <p className="text-slate-400 text-xs">
-        {time.toLocaleDateString()} {time.toLocaleTimeString()}
-      </p>
+      <p className="text-slate-400 text-xs">{date}</p>
     </div>
   );
 }

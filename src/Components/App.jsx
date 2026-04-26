@@ -1,9 +1,31 @@
 import { useState, useEffect, useRef } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import countriesArray from "./countriesArray";
 import ClockContainer from "./ClockContainer";
 import Header from "./Header";
 
 const orbitron = { fontFamily: "'Orbitron', sans-serif" };
+const ORDER_STORAGE_KEY = "global-clock-order";
+const DEFAULT_ORDER_IDS = countriesArray.map((country) => String(country.id));
+const countryById = new Map(
+  countriesArray.map((country) => [String(country.id), country])
+);
 
 const STARS = Array.from({ length: 90 }, (_, i) => ({
   x: (i * 137.508) % 100,
@@ -65,27 +87,177 @@ function getSkyBackground(hour) {
   ].join(", ");
 }
 
+function DragHandle() {
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute top-3 right-3 p-2 text-white/35 opacity-70 transition-all pointer-events-none group-hover:text-cyan-300 group-hover:opacity-100"
+    >
+      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+        <circle cx="5" cy="4" r="1.2" />
+        <circle cx="11" cy="4" r="1.2" />
+        <circle cx="5" cy="8" r="1.2" />
+        <circle cx="11" cy="8" r="1.2" />
+        <circle cx="5" cy="12" r="1.2" />
+        <circle cx="11" cy="12" r="1.2" />
+      </svg>
+    </div>
+  );
+}
+
+function SortableCard({ country, isDigital, isSelected }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: String(country.id) });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      aria-label={`Drag to reorder ${country.country} clock`}
+      data-sortable-card="true"
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative group flex items-center justify-center rounded-3xl p-5 w-full cursor-grab select-none touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 active:cursor-grabbing ${
+        isDragging ? "z-20 opacity-30" : ""
+      } ${
+        isSelected
+          ? "bg-cyan-400/10 ring-1 ring-cyan-400/50 shadow-[0_0_24px_rgba(6,182,212,0.18)]"
+        : "bg-black/10"
+      }`}
+    >
+      <DragHandle />
+      <ClockContainer country={country} isDigital={isDigital} />
+    </div>
+  );
+}
+
+function getInitialOrderedIds() {
+  if (typeof window === "undefined") return DEFAULT_ORDER_IDS;
+
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(ORDER_STORAGE_KEY));
+    if (!Array.isArray(stored)) return DEFAULT_ORDER_IDS;
+
+    const knownIds = new Set(DEFAULT_ORDER_IDS);
+    const normalizedStored = stored.map((id) => String(id));
+    const storedIds = normalizedStored.filter(
+      (id, index) => knownIds.has(id) && normalizedStored.indexOf(id) === index
+    );
+    const missingIds = DEFAULT_ORDER_IDS.filter((id) => !storedIds.includes(id));
+
+    return [...storedIds, ...missingIds];
+  } catch {
+    return DEFAULT_ORDER_IDS;
+  }
+}
+
+function matchesSearch(country, query) {
+  if (!query) return true;
+
+  return (
+    country.country.toLowerCase().includes(query) ||
+    country.continent.toLowerCase().includes(query) ||
+    country.timezone.toLowerCase().includes(query)
+  );
+}
+
 function App() {
   const [currentHour, setCurrentHour] = useState(() => new Date().getHours());
   const [isDigital, setIsDigital] = useState(false);
   const [search, setSearch] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [orderedIds, setOrderedIds] = useState(getInitialOrderedIds);
+  const [activeId, setActiveId] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentHour(new Date().getHours()), 60000);
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orderedIds));
+    } catch {
+      // Ignore storage failures; dragging should still work for the current session.
+    }
+  }, [orderedIds]);
+
   const showStars = currentHour >= 20 || currentHour < 7;
 
+  const orderedCountries = orderedIds
+    .map((id) => countryById.get(id))
+    .filter(Boolean);
+  const safeOrderedCountries =
+    orderedCountries.length === countriesArray.length ? orderedCountries : countriesArray;
   const q = search.trim().toLowerCase();
   const visibleCountries = q
-    ? countriesArray.filter(
-        (c) =>
-          c.country.toLowerCase().includes(q) ||
-          c.continent.toLowerCase().includes(q) ||
-          c.timezone.toLowerCase().includes(q)
-      )
-    : countriesArray;
+    ? safeOrderedCountries.filter((country) => matchesSearch(country, q))
+    : safeOrderedCountries;
+
+  const countRef = useRef(visibleCountries.length);
+  useEffect(() => { countRef.current = visibleCountries.length; }, [visibleCountries.length]);
+
+  useEffect(() => { setSelectedIndex(null); }, [search]);
+
+  useEffect(() => {
+    function onKey(e) {
+      if (
+        ["BUTTON", "INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
+        document.activeElement?.dataset.sortableCard === "true"
+      ) {
+        return;
+      }
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      setSelectedIndex((prev) => {
+        const len = countRef.current;
+        if (len === 0) return null;
+        if (prev === null) return e.key === "ArrowRight" ? 0 : len - 1;
+        return e.key === "ArrowRight" ? (prev + 1) % len : (prev - 1 + len) % len;
+      });
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function onDragStart({ active }) {
+    setActiveId(String(active.id));
+  }
+
+  function reorderClocks(active, over) {
+    if (!over || active.id === over.id) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    setOrderedIds((prev) => {
+      const visibleIds = prev.filter((id) => {
+        const country = countryById.get(id);
+        return country && matchesSearch(country, q);
+      });
+      const oldIdx = visibleIds.indexOf(activeId);
+      const newIdx = visibleIds.indexOf(overId);
+      if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return prev;
+
+      const reorderedVisible = arrayMove(visibleIds, oldIdx, newIdx);
+      const visibleIdSet = new Set(visibleIds);
+      let vi = 0;
+
+      return prev.map((id) => (visibleIdSet.has(id) ? reorderedVisible[vi++] : id));
+    });
+  }
+
+  function onDragEnd({ active, over }) {
+    reorderClocks(active, over);
+    setActiveId(null);
+  }
+
+  const activeCountry = activeId ? countryById.get(activeId) : null;
 
   return (
     <div
@@ -164,25 +336,48 @@ function App() {
             </button>
           )}
         </div>
+        <p className="text-white/20 text-xs" style={orbitron}>← → to navigate</p>
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 place-items-center">
-        {visibleCountries.length > 0 ? (
-          visibleCountries.map((country) => (
-            <div
-              key={country.id}
-              className="flex items-center justify-center rounded-3xl p-5 bg-black/10 w-full"
-            >
-              <ClockContainer country={country} isDigital={isDigital} />
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full flex flex-col items-center gap-2 py-20 text-white/25" style={orbitron}>
-            <span className="text-4xl">🌐</span>
-            <p className="text-sm">No clocks match &ldquo;{search}&rdquo;</p>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={onDragStart}
+        onDragOver={({ active, over }) => reorderClocks(active, over)}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => setActiveId(null)}
+      >
+          <SortableContext
+          items={visibleCountries.map((c) => String(c.id))}
+          strategy={rectSortingStrategy}
+        >
+          <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 place-items-center">
+            {visibleCountries.length > 0 ? (
+              visibleCountries.map((country, i) => (
+                <SortableCard
+                  key={country.id}
+                  country={country}
+                  isDigital={isDigital}
+                  isSelected={selectedIndex === i}
+                />
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center gap-2 py-20 text-white/25" style={orbitron}>
+                <span className="text-4xl">🌐</span>
+                <p className="text-sm">No clocks match &ldquo;{search}&rdquo;</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </SortableContext>
+
+        <DragOverlay>
+          {activeCountry && (
+            <div className="relative flex items-center justify-center rounded-3xl p-5 bg-cyan-400/10 ring-1 ring-cyan-400/50 shadow-[0_0_40px_rgba(6,182,212,0.25)] opacity-95">
+              <ClockContainer country={activeCountry} isDigital={isDigital} />
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 }

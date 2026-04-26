@@ -10,8 +10,8 @@ GlobalClock is a React world clock dashboard built with Vite and Tailwind CSS. I
 
 | Metric         | Score |
 | -------------- | ----- |
-| Performance    | 91    |
-| Accessibility  | 96    |
+| Performance    | 100    |
+| Accessibility  | 100    |
 | Best Practices | 100   |
 | SEO            | 100   |
 

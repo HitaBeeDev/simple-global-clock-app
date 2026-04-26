@@ -19,7 +19,7 @@ function App() {
   };
 
   return (
-    <div className="flex-col min-h-screen flex items-center justify-center bg-slate-100 gap-16">
+    <div className="flex-col min-h-screen flex items-center justify-center bg-gray-950 gap-16">
       <ClockContainer country={countriesArray[currentCountryIndex]} />
       <Buttons onPrevious={handlePrevious} onNext={handleNext} />
     </div>

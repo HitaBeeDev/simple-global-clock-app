@@ -6,3 +6,30 @@
   0%, 100% { opacity: var(--star-opacity); }
   50% { opacity: calc(var(--star-opacity) * 0.15); }
 }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #0b1120 0%,
+    #182035 40%,
+    #22304d 50%,
+    #182035 60%,
+    #0b1120 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}

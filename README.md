@@ -8,12 +8,12 @@ GlobalClock is a React world clock dashboard built with Vite and Tailwind CSS. I
 
 ## Performance
 
-| Metric | Score |
-|---|---|
-| Performance | 91 |
-| Accessibility | 96 |
-| Best Practices | 100 |
-| SEO | 100 |
+| Metric         | Score |
+| -------------- | ----- |
+| Performance    | 91    |
+| Accessibility  | 96    |
+| Best Practices | 100   |
+| SEO            | 100   |
 
 ### Features
 
@@ -63,24 +63,3 @@ Preview the production build:
 ```bash
 npm run preview
 ```
-
-### Data Source
-
-The app does not call a backend or external time API. Timezone entries live in `src/Components/countriesArray.js`, and each clock is calculated locally with:
-
-```js
-new Date().toLocaleString("en-US", {
-  timeZone: country.timezone,
-});
-```
-
-This keeps the app fast, private, and usable without a server dependency. The displayed time depends on the user's device clock and the browser's built-in timezone database.
-
-### Deployment
-
-The app is ready for static hosting platforms such as Vercel. Use the default Vite settings:
-
-- Build command: `npm run build`
-- Output directory: `dist`
-
-Vercel serves deployments over HTTPS automatically.

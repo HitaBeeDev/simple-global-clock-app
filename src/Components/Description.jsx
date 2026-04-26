@@ -43,11 +43,11 @@ export default function Description({ country, time }) {
       <div className="flex items-center justify-center gap-2 text-xs">
         <span className="text-amber-400/80 font-medium">{ampm}</span>
         <span className="text-white/20">·</span>
-        <span className="text-white/40">{utcOffset}</span>
+        <span className="text-white/75">{utcOffset}</span>
         <span className="text-white/20">·</span>
-        <span className={isLocal ? "text-cyan-400/60" : "text-white/50"}>{diff}</span>
+        <span className={isLocal ? "text-cyan-300" : "text-white/75"}>{diff}</span>
       </div>
-      <p className="text-slate-400 text-xs">{date}</p>
+      <p className="text-slate-300 text-xs">{date}</p>
     </div>
   );
 }

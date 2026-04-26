@@ -334,7 +334,7 @@ function App() {
   const activeCountry = activeId ? countryById.get(activeId) : null;
 
   return (
-    <div
+    <main
       className="min-h-screen flex flex-col items-center gap-10 py-10 px-4 relative overflow-x-hidden"
       style={{ background: getSkyBackground(currentHour) }}
     >
@@ -362,33 +362,37 @@ function App() {
         <Header />
         <div className="flex flex-wrap items-center justify-center gap-2">
           <button
+            aria-pressed={!isDigital}
             onClick={() => setIsDigital(false)}
-            className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+            className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 ${
               !isDigital
                 ? "border-cyan-400/70 bg-cyan-400/10 text-cyan-400"
-                : "border-white/10 text-white/25 hover:text-white/40"
+                : "border-white/20 text-white/75 hover:text-white"
             }`}
             style={orbitron}
           >
             Analog
           </button>
           <button
+            aria-pressed={isDigital}
             onClick={() => setIsDigital(true)}
-            className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+            className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 ${
               isDigital
                 ? "border-cyan-400/70 bg-cyan-400/10 text-cyan-400"
-                : "border-white/10 text-white/25 hover:text-white/40"
+                : "border-white/20 text-white/75 hover:text-white"
             }`}
             style={orbitron}
           >
             Digital
           </button>
           <button
+            aria-label={isTickingSoundOn ? "Turn ticking sound off" : "Turn ticking sound on"}
+            aria-pressed={isTickingSoundOn}
             onClick={() => setIsTickingSoundOn((current) => !current)}
-            className={`inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+            className={`inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 ${
               isTickingSoundOn
                 ? "border-amber-400/70 bg-amber-400/10 text-amber-300"
-                : "border-white/10 text-white/25 hover:text-white/40"
+                : "border-white/20 text-white/75 hover:text-white"
             }`}
             style={orbitron}
           >
@@ -406,23 +410,25 @@ function App() {
             <path strokeLinecap="round" d="M21 21l-4.35-4.35" />
           </svg>
           <input
+            aria-label="Search city, region, or timezone"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search city, region, or timezone…"
-            className="w-full pl-9 pr-9 py-2 rounded-full bg-white/5 border border-white/10 text-white/80 text-xs placeholder-white/25 focus:outline-none focus:border-cyan-400/50 focus:bg-cyan-400/5 transition-all duration-200"
+            className="w-full pl-9 pr-9 py-2 rounded-full bg-white/5 border border-white/20 text-white text-xs placeholder-white/65 focus:outline-none focus:border-cyan-300 focus:bg-cyan-400/5 focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 transition-all duration-200"
             style={orbitron}
           />
           {search && (
             <button
+              aria-label="Clear search"
               onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/75 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 rounded-full"
             >
               ✕
             </button>
           )}
         </div>
-        <p className="text-white/20 text-xs" style={orbitron}>← → to navigate</p>
+        <p className="text-white/75 text-xs" style={orbitron}>← → to navigate</p>
       </div>
 
       <DndContext
@@ -450,7 +456,7 @@ function App() {
                 ))}
               </AnimatePresence>
             ) : (
-              <div className="col-span-full flex flex-col items-center gap-2 py-20 text-white/25" style={orbitron}>
+              <div className="col-span-full flex flex-col items-center gap-2 py-20 text-white/75" style={orbitron}>
                 <span className="text-4xl">🌐</span>
                 <p className="text-sm">No clocks match &ldquo;{search}&rdquo;</p>
               </div>
@@ -466,7 +472,7 @@ function App() {
           )}
         </DragOverlay>
       </DndContext>
-    </div>
+    </main>
   );
 }
 

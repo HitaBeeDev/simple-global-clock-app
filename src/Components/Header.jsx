@@ -6,7 +6,7 @@ export default function Header() {
       <div className="flex items-center gap-3">
         <div className="h-px w-10 bg-gradient-to-r from-transparent to-cyan-400/50" />
         <p
-          className="text-xs tracking-[0.45em] text-cyan-400/55 uppercase"
+          className="text-xs tracking-[0.45em] text-cyan-300 uppercase"
           style={orbitron}
         >
           World Time

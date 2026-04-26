@@ -16,6 +16,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { AnimatePresence, motion } from "framer-motion";
 import countriesArray from "./countriesArray";
 import ClockContainer from "./ClockContainer";
 import Header from "./Header";
@@ -106,19 +107,23 @@ function DragHandle() {
 }
 
 function SortableCard({ country, isDigital, isSelected }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+  const { attributes, listeners, setNodeRef, transform, transition: sortableTransition, isDragging } =
     useSortable({ id: String(country.id) });
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
       {...attributes}
       {...listeners}
       aria-label={`Drag to reorder ${country.country} clock`}
       data-sortable-card="true"
-      style={{ transform: CSS.Transform.toString(transform), transition }}
+      style={{ transform: CSS.Transform.toString(transform), transition: sortableTransition }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isDragging ? 0.3 : 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
       className={`relative group flex items-center justify-center rounded-3xl p-5 w-full cursor-grab select-none touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 active:cursor-grabbing ${
-        isDragging ? "z-20 opacity-30" : ""
+        isDragging ? "z-20" : ""
       } ${
         isSelected
           ? "bg-cyan-400/10 ring-1 ring-cyan-400/50 shadow-[0_0_24px_rgba(6,182,212,0.18)]"
@@ -126,8 +131,35 @@ function SortableCard({ country, isDigital, isSelected }) {
       }`}
     >
       <DragHandle />
-      <ClockContainer country={country} isDigital={isDigital} />
-    </div>
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 18, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -14, scale: 0.97 }}
+        transition={{ duration: 0.24, ease: "easeOut" }}
+      >
+        <ClockContainer country={country} isDigital={isDigital} />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function SoundIcon({ isOn }) {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 9v6h4l5 4V5L8 9H4Z" />
+      {isOn ? (
+        <>
+          <path strokeLinecap="round" d="M17 9.5a4 4 0 0 1 0 5" />
+          <path strokeLinecap="round" d="M19.5 7a7.5 7.5 0 0 1 0 10" />
+        </>
+      ) : (
+        <>
+          <path strokeLinecap="round" d="M17 9l4 6" />
+          <path strokeLinecap="round" d="M21 9l-4 6" />
+        </>
+      )}
+    </svg>
   );
 }
 
@@ -168,6 +200,8 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [orderedIds, setOrderedIds] = useState(getInitialOrderedIds);
   const [activeId, setActiveId] = useState(null);
+  const [isTickingSoundOn, setIsTickingSoundOn] = useState(false);
+  const audioContextRef = useRef(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -186,6 +220,46 @@ function App() {
       // Ignore storage failures; dragging should still work for the current session.
     }
   }, [orderedIds]);
+
+  useEffect(() => {
+    if (!isTickingSoundOn) return undefined;
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      setIsTickingSoundOn(false);
+      return undefined;
+    }
+
+    const audioContext = audioContextRef.current ?? new AudioContext();
+    audioContextRef.current = audioContext;
+
+    function playTick() {
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const now = audioContext.currentTime;
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(1400, now);
+      oscillator.frequency.exponentialRampToValueAtTime(850, now + 0.035);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.045, now + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.06);
+    }
+
+    playTick();
+    const interval = window.setInterval(playTick, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [isTickingSoundOn]);
 
   const showStars = currentHour >= 20 || currentHour < 7;
 
@@ -286,7 +360,7 @@ function App() {
 
       <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-6xl">
         <Header />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <button
             onClick={() => setIsDigital(false)}
             className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
@@ -308,6 +382,18 @@ function App() {
             style={orbitron}
           >
             Digital
+          </button>
+          <button
+            onClick={() => setIsTickingSoundOn((current) => !current)}
+            className={`inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+              isTickingSoundOn
+                ? "border-amber-400/70 bg-amber-400/10 text-amber-300"
+                : "border-white/10 text-white/25 hover:text-white/40"
+            }`}
+            style={orbitron}
+          >
+            <SoundIcon isOn={isTickingSoundOn} />
+            {isTickingSoundOn ? "Tick on" : "Tick off"}
           </button>
         </div>
 
@@ -353,14 +439,16 @@ function App() {
         >
           <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 place-items-center">
             {visibleCountries.length > 0 ? (
-              visibleCountries.map((country, i) => (
-                <SortableCard
-                  key={country.id}
-                  country={country}
-                  isDigital={isDigital}
-                  isSelected={selectedIndex === i}
-                />
-              ))
+              <AnimatePresence initial={false}>
+                {visibleCountries.map((country, i) => (
+                  <SortableCard
+                    key={country.id}
+                    country={country}
+                    isDigital={isDigital}
+                    isSelected={selectedIndex === i}
+                  />
+                ))}
+              </AnimatePresence>
             ) : (
               <div className="col-span-full flex flex-col items-center gap-2 py-20 text-white/25" style={orbitron}>
                 <span className="text-4xl">🌐</span>

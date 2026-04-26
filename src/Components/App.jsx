@@ -14,53 +14,61 @@ const STARS = Array.from({ length: 90 }, (_, i) => ({
 
 function getSkyBackground(hour) {
   if (hour >= 22 || hour < 5) {
+    // Night: near-black with deep midnight blue, faint cool moonlight
     return [
-      "radial-gradient(ellipse at 28% 18%, rgba(180,210,255,0.18) 0%, transparent 40%)",
-      "linear-gradient(to bottom, #020617, #0b1023, #1a1a3e)",
+      "radial-gradient(ellipse at 30% 20%, rgba(160,185,230,0.1) 0%, transparent 38%)",
+      "linear-gradient(to bottom, #010208, #04091a, #080f28)",
     ].join(", ");
   }
   if (hour < 7) {
+    // Dawn: deep indigo at zenith, warm amber glow rising at horizon
     return [
-      "radial-gradient(ellipse at 10% 90%, rgba(255,130,40,0.6) 0%, transparent 45%)",
-      "radial-gradient(ellipse at 35% 100%, rgba(180,40,20,0.35) 0%, transparent 35%)",
-      "linear-gradient(to bottom, #0c0820, #2d1060, #7c2060, #c2410c)",
+      "radial-gradient(ellipse at 14% 90%, rgba(210,100,25,0.5) 0%, transparent 40%)",
+      "radial-gradient(ellipse at 45% 100%, rgba(140,25,10,0.28) 0%, transparent 30%)",
+      "linear-gradient(to bottom, #07031a, #1c0a42, #541540, #a83808)",
     ].join(", ");
   }
   if (hour < 9) {
+    // Sunrise: coral and amber, sun blooming at horizon
     return [
-      "radial-gradient(ellipse at 50% 94%, rgba(255,215,60,0.8) 0%, transparent 38%)",
-      "radial-gradient(ellipse at 50% 100%, rgba(255,90,0,0.55) 0%, transparent 35%)",
-      "linear-gradient(to bottom, #3b0a00, #9a2c00, #ea580c, #fbbf24)",
+      "radial-gradient(ellipse at 50% 93%, rgba(235,170,35,0.72) 0%, transparent 36%)",
+      "radial-gradient(ellipse at 50% 100%, rgba(210,65,8,0.48) 0%, transparent 30%)",
+      "linear-gradient(to bottom, #18060000, #180600, #561400, #bf4808, #e07a18, #f0b830)",
     ].join(", ");
   }
   if (hour < 12) {
+    // Morning: deep cerulean at zenith, hazy pale blue at horizon
     return [
-      "radial-gradient(ellipse at 80% 10%, rgba(255,255,210,0.45) 0%, transparent 32%)",
-      "linear-gradient(to bottom, #0b3d5e, #0369a1, #0ea5e9, #7dd3fc)",
+      "radial-gradient(ellipse at 82% 10%, rgba(255,248,195,0.3) 0%, transparent 26%)",
+      "linear-gradient(to bottom, #0c2a42, #18557a, #2e80b0, #58a8cc, #8cc4de)",
     ].join(", ");
   }
   if (hour < 15) {
+    // Midday: bright open sky, sun white-hot overhead, horizon haze
     return [
-      "radial-gradient(ellipse at 50% 4%, rgba(255,255,255,0.4) 0%, transparent 28%)",
-      "linear-gradient(to bottom, #0277bd, #0ea5e9, #38bdf8, #bae6fd)",
+      "radial-gradient(ellipse at 50% 2%, rgba(255,252,215,0.38) 0%, transparent 24%)",
+      "linear-gradient(to bottom, #0e4878, #1a78b0, #3898cc, #6abce0, #aad4ea)",
     ].join(", ");
   }
   if (hour < 18) {
+    // Afternoon: rich sky blue, sun shifting west, warm horizon haze
     return [
-      "radial-gradient(ellipse at 20% 16%, rgba(255,240,160,0.28) 0%, transparent 32%)",
-      "linear-gradient(to bottom, #1a3480, #1d4ed8, #3b82f6, #93c5fd)",
+      "radial-gradient(ellipse at 24% 14%, rgba(255,238,155,0.2) 0%, transparent 26%)",
+      "linear-gradient(to bottom, #0b3460, #18609a, #3488c0, #62aad6, #9ccae0)",
     ].join(", ");
   }
   if (hour < 20) {
+    // Sunset: dramatic — deep plum at zenith, fire at horizon
     return [
-      "radial-gradient(ellipse at 50% 92%, rgba(255,160,0,0.9) 0%, transparent 42%)",
-      "radial-gradient(ellipse at 50% 100%, rgba(200,30,0,0.45) 0%, transparent 35%)",
-      "linear-gradient(to bottom, #150a30, #6d1a0e, #c2410c, #f97316)",
+      "radial-gradient(ellipse at 50% 91%, rgba(245,145,18,0.82) 0%, transparent 38%)",
+      "radial-gradient(ellipse at 50% 100%, rgba(185,35,5,0.42) 0%, transparent 30%)",
+      "linear-gradient(to bottom, #07041c, #22082e, #741808, #c04810, #e08018)",
     ].join(", ");
   }
+  // Dusk: last warmth fading into indigo night
   return [
-    "radial-gradient(ellipse at 75% 75%, rgba(255,90,40,0.22) 0%, transparent 35%)",
-    "linear-gradient(to bottom, #140830, #3b1080, #26185a, #0f172a)",
+    "radial-gradient(ellipse at 74% 74%, rgba(200,70,25,0.16) 0%, transparent 30%)",
+    "linear-gradient(to bottom, #030110, #0e0628, #220e58, #160830)",
   ].join(", ");
 }
 

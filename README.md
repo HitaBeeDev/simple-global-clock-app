@@ -3,7 +3,7 @@
 GlobalClock is a React world clock dashboard built with Vite and Tailwind CSS. It shows live analog or digital clocks for countries across multiple timezones, with search, drag-to-reorder, smooth transitions, and an optional ambient ticking sound.
 
 <p align="center">
-  <img src="docs/assets/preview.png" alt="GlobalClock world clock dashboard preview" width="800" />
+  <img src="docs/assets/globalclock-preview.png" alt="GlobalClock world clock dashboard preview" width="800" />
 </p>
 
 ## Performance

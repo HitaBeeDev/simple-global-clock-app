@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import countriesArray from "./countriesArray";
 import ClockContainer from "./ClockContainer";
 import Buttons from "./Buttons";
+import Header from "./Header";
 
 const STARS = Array.from({ length: 90 }, (_, i) => ({
   x: (i * 137.508) % 100,
@@ -122,6 +123,7 @@ function App() {
           ))}
         </div>
       )}
+      <Header />
       <ClockContainer country={countriesArray[currentCountryIndex]} />
       <Buttons onPrevious={handlePrevious} onNext={handleNext} />
     </div>

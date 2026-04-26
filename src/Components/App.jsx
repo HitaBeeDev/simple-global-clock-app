@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import countriesArray from "./countriesArray";
 import ClockContainer from "./ClockContainer";
 import Header from "./Header";
